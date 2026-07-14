@@ -1,40 +1,43 @@
-# Stage 1: build the frontend and export locked requirements
-FROM registry.access.redhat.com/ubi9/python-312:latest AS builder
+# syntax=docker/dockerfile:1
+# Expects pre-built artifacts in dist/:
+#   - dist/*.whl (the project wheel)
+#   - dist/requirements.txt (locked dependencies)
+# Build with: make build
+FROM registry.access.redhat.com/ubi10/ubi-minimal:latest
 
-USER 0
-RUN pip install --no-cache-dir uv
+# Layer 1: system packages and application user (rarely changes)
+RUN bash -euo pipefail <<EOF
+microdnf install -y --disableplugin=subscription-manager --nodocs \
+    python3.12 shadow-utils
+useradd -u 1001 -g 0 -d /opt/app-root/src -M -s /bin/bash \
+    -c "Default Application User" default
+mkdir -p -m 770 /opt/app-root/src/.cache
+chown -R 1001:0 /opt/app-root/src
+microdnf remove -y shadow-utils
+microdnf clean all
+EOF
 
-WORKDIR /build
-COPY . .
+# Layer 2: install uv and create virtual environment (changes on uv version bumps)
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+RUN uv venv --python python3.12 --allow-existing /opt/app-root
 
-# Build the project wheel (hatch_build.py runs npm ci + vite build)
-# then export locked dependencies with hashes
-RUN uv build --no-cache --wheel --out-dir /build/dist
-RUN uv export --no-dev --no-editable --no-header --no-emit-project --no-hashes > /build/requirements.txt
+ENV VIRTUAL_ENV=/opt/app-root \
+    PATH="/opt/app-root/bin:$PATH" \
+    HOME=/opt/app-root/src
 
-# Stage 2: minimal runtime image
-FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
+# Layer 3: install locked dependencies (changes on dependency updates)
+COPY dist/requirements.txt /tmp/requirements.txt
+RUN bash -euo pipefail <<EOF
+uv pip install --no-cache -r /tmp/requirements.txt
+rm /tmp/requirements.txt
+EOF
 
-# Install Python
-RUN microdnf install -y --disableplugin=subscription-manager --nodocs \
-        python3.12 python3.12-pip && \
-    microdnf clean all
-
-# Install the project wheel and locked dependencies with hash verification
-COPY --from=builder /build/requirements.txt /tmp/requirements.txt
-COPY --from=builder /build/dist/*.whl /tmp/dist/
-RUN python3.12 -m pip install --no-cache-dir \
-        -r /tmp/requirements.txt /tmp/dist/*.whl && \
-    microdnf remove -y python3.12-pip && \
-    microdnf clean all && \
-    rm -rf /tmp/requirements.txt /tmp/dist
-
-# Create application user and cache directory
-RUN useradd -u 1001 -g 0 -d /opt/app-root/src -M -s /bin/bash -c "Default Application User" default && \
-    mkdir -p -m 770 /opt/app-root/src/.cache && \
-    chown -R 1001:0 /opt/app-root/src
-
-ENV HOME=/opt/app-root/src
+# Layer 4: install the project wheel (changes on every release)
+COPY dist/*.whl /tmp/dist/
+RUN bash -euo pipefail <<EOF
+uv pip install --no-cache --no-deps /tmp/dist/*.whl
+rm -rf /tmp/dist
+EOF
 
 WORKDIR ${HOME}
 USER 1001

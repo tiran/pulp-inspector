@@ -21,6 +21,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Build wheel and export requirements
+        run: |
+          uv build --no-cache --wheel --out-dir dist
+          uv export --no-dev --no-editable --no-header --no-emit-project --no-hashes > dist/requirements.txt
+
       - uses: docker/setup-qemu-action@v3
 
       - uses: docker/setup-buildx-action@v3
@@ -39,10 +54,22 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
             type=ref,event=branch
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=sha
+          labels: |
+            org.opencontainers.image.source=https://github.com/tiran/pulp-inspector
+            org.opencontainers.image.description=Pulp Inspector browses and inspects Python wheels hosted on Pulp Python indexes, such as the RHOAI indexes on packages.redhat.com.
+            org.opencontainers.image.licenses=Apache-2.0
+            name=pulp-inspector
+            summary=Browse and inspect Python wheels on Pulp indexes
+            distribution-scope=public
+            authoritative-source-url=https://github.com/tiran/pulp-inspector
+            io.k8s.display-name=Browse and inspect Python wheels on Pulp indexes
+            io.k8s.description=Pulp Inspector browses and inspects Python wheels hosted on Pulp Python indexes, such as the RHOAI indexes on packages.redhat.com.
+            io.openshift.tags=rhel10 python pulp-inspector
 
       - name: Build and push
         uses: docker/build-push-action@v6

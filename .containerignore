@@ -20,9 +20,6 @@ ui/node_modules
 
 # Build artifacts
 build
-dist
-*.egg
-*.whl
 
 # Caches
 .cache
