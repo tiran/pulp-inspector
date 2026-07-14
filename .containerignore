@@ -1,0 +1,42 @@
+# Version control
+.gitignore
+
+# Python
+__pycache__
+*.py[codz]
+*.egg-info
+.venv
+.tox
+.nox
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.pytype
+.pyre
+.dmypy.json
+
+# Node
+ui/node_modules
+
+# Build artifacts
+build
+dist
+*.egg
+*.whl
+
+# Caches
+.cache
+.npm
+.eslintcache
+
+# IDE / OS
+.idea
+.vscode
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Project-specific
+.claude
+src/pulp_inspector/static/*

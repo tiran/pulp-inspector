@@ -1,0 +1,154 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pulp-inspector"
+version = "0.1.0"
+description = "Pulp Inspector - Browse and inspect Python packages on Pulp indexes"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: FastAPI",
+    "Private :: Do Not Upload",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "License :: OSI Approved :: Apache Software License",
+]
+dependencies = [
+    "aiohttp",
+    "aiohttp-client-cache[filesystem,sqlite]",
+    "elfdeps",
+    "fastapi>=0.115",
+    "pypi-simple",
+    "uvicorn[standard]>=0.34",
+    "zipwire[aiohttp]",
+]
+
+[project.optional-dependencies]
+dev = [
+    "honcho",
+]
+test = [
+    "pytest>=8",
+    "httpx>=0.28",
+    "pytest-asyncio>=1.0",
+]
+
+[project.scripts]
+pulp-inspector = "pulp_inspector.app:main"
+
+# Hatch / Hatchling
+[tool.hatch.build.targets.wheel]
+packages = ["src/pulp_inspector"]
+
+[tool.hatch.build]
+artifacts = [
+    "src/pulp_inspector/static/**",
+]
+
+[tool.hatch.build.hooks.custom]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/pulp_inspector", "ui", "hatch_build.py", "tests", "LICENSE", "README.md", "pyproject.toml"]
+
+# Ruff
+[tool.ruff]
+target-version = "py312"
+line-length = 98
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "F",     # pyflakes
+    "I",     # isort
+    "N",     # pep8-naming
+    "UP",    # pyupgrade
+    "B",     # flake8-bugbear
+    "A",     # flake8-builtins
+    "S",     # flake8-bandit
+    "T20",   # flake8-print
+    "SIM",   # flake8-simplify
+    "RUF",   # ruff-specific rules
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
+# ty
+[tool.ty.environment]
+python-version = "3.12"
+
+# pytest
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+# tox
+[tool.tox]
+requires = ["tox>=4.19"]
+env_list = ["fix", "lint", "format", "typecheck", "test", "ui-lint", "ui-typecheck", "lock"]
+
+[tool.tox.env.fix]
+description = "Auto-fix lint issues and reformat code"
+skip_install = true
+deps = ["ruff>=0.15"]
+commands = [
+    ["ruff", "check", "--fix", "src/", "tests/"],
+    ["ruff", "format", "src/", "tests/"],
+]
+
+[tool.tox.env.lint]
+description = "Run ruff linter"
+skip_install = true
+deps = ["ruff>=0.15"]
+commands = [["ruff", "check", "src/", "tests/"]]
+
+[tool.tox.env.format]
+description = "Check code formatting with ruff"
+skip_install = true
+deps = ["ruff>=0.15"]
+commands = [["ruff", "format", "--check", "src/", "tests/"]]
+
+[tool.tox.env.typecheck]
+description = "Run ty type checker"
+deps = ["ty>=0.0.40"]
+commands = [["ty", "check", "src/"]]
+
+[tool.tox.env.test]
+description = "Run pytest test suite"
+extras = ["test"]
+commands = [["pytest", "{posargs}"]]
+
+[tool.tox.env.ui-lint]
+description = "Run biome linter and formatter check on frontend"
+skip_install = true
+allowlist_externals = ["npm"]
+commands = [["npm", "run", "--prefix", "ui", "lint"]]
+
+[tool.tox.env.ui-typecheck]
+description = "Run TypeScript type checker on frontend"
+skip_install = true
+allowlist_externals = ["npm"]
+commands = [["npm", "run", "--prefix", "ui", "typecheck"]]
+
+[tool.tox.env.lock]
+description = "Refresh lock files with 3-day package cooldown"
+skip_install = true
+allowlist_externals = ["bash", "uv", "npm"]
+commands = [
+    ["uv", "lock", "--exclude-newer=3d"],
+    ["bash", "-c", "cd ui && npm install --before=$(date -u -d '3 days ago' '+%Y-%m-%dT%H:%M:%SZ')"],
+]

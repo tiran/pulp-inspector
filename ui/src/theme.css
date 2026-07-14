@@ -1,0 +1,55 @@
+/*
+ * Pulp Inspector theme overrides
+ *
+ * Uses PatternFly's Felt theme (Red Hat red accents, pill-shaped borders)
+ * with a dark masthead and sidebar matching the OpenShift Console / FreeIPA look.
+ *
+ * This file is imported last in main.tsx so it takes precedence over
+ * PatternFly component styles.
+ */
+
+/* Dark masthead */
+.pf-v6-c-masthead {
+  background-color: var(--pf-t--color--gray--95, #151515);
+  border-color: var(--pf-t--color--gray--80, #292929);
+  color: var(--pf-t--color--white, #fff);
+}
+
+.pf-v6-c-masthead .pf-v6-c-masthead__brand {
+  color: var(--pf-t--color--white, #fff);
+}
+
+.pf-v6-c-masthead .pf-v6-c-button,
+.pf-v6-c-masthead .pf-v6-c-button:hover,
+.pf-v6-c-masthead .pf-v6-c-button__icon,
+.pf-v6-c-masthead .pf-v6-c-button svg {
+  color: #fff;
+  fill: #fff;
+}
+
+/* Dark sidebar */
+.pf-v6-c-page__sidebar {
+  background-color: var(--pf-t--color--gray--95, #151515);
+}
+
+/* Nav links: light text on dark background */
+.pf-v6-c-page__sidebar .pf-v6-c-nav__link {
+  color: var(--pf-t--color--gray--20, #c7c7c7);
+}
+
+.pf-v6-c-page__sidebar .pf-v6-c-nav__link:hover {
+  color: var(--pf-t--color--white, #fff);
+  background-color: var(--pf-t--color--gray--80, #292929);
+}
+
+.pf-v6-c-page__sidebar .pf-v6-c-nav__link.pf-m-current,
+.pf-v6-c-page__sidebar .pf-v6-c-nav__link.pf-m-current:hover {
+  color: var(--pf-t--color--white, #fff);
+  background-color: var(--pf-t--color--gray--70, #383838);
+}
+
+/* Softer main content background, no rounded corners */
+.pf-v6-c-page__main-section {
+  background-color: var(--pf-t--color--gray--10, #f0f0f0);
+  border-radius: 0;
+}
