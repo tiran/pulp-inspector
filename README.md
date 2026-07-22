@@ -19,13 +19,16 @@ pulp-inspector --host 0.0.0.0 --port 9090
 
 ### Container
 
+Run the pre-built image from GHCR:
+
 ```
-podman build -t pulp-inspector -f Containerfile .
-podman run --rm -p 9090:9090 pulp-inspector
+podman run --rm -p 9090:9090 ghcr.io/tiran/pulp-inspector:latest
 ```
 
-Or using the Makefile:
+Or build locally:
 
 ```
 make run
 ```
+
+Then open <http://localhost:9090> in your browser.

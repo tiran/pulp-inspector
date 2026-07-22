@@ -201,9 +201,9 @@ function WheelPage() {
 
   // Pagination state
   const [filesPage, setFilesPage] = useState(1);
-  const [filesPerPage, setFilesPerPage] = useState(50);
+  const [filesPerPage, setFilesPerPage] = useState(100);
   const [comparePage, setComparePage] = useState(1);
-  const [comparePerPage, setComparePerPage] = useState(50);
+  const [comparePerPage, setComparePerPage] = useState(100);
 
   // Expandable diff state: keyed by filepath
   const [expandedFiles, setExpandedFiles] = useState<Set<string>>(new Set());
@@ -332,6 +332,11 @@ function WheelPage() {
                   itemCount={data.files.length}
                   perPage={filesPerPage}
                   page={filesPage}
+                  perPageOptions={[
+                    { title: "50", value: 50 },
+                    { title: "100", value: 100 },
+                    { title: "500", value: 500 },
+                  ]}
                   onSetPage={(_e, p) => setFilesPage(p)}
                   onPerPageSelect={(_e, pp) => {
                     setFilesPerPage(pp);
@@ -509,6 +514,11 @@ function WheelPage() {
                             itemCount={filtered.length}
                             perPage={comparePerPage}
                             page={comparePage}
+                            perPageOptions={[
+                              { title: "50", value: 50 },
+                              { title: "100", value: 100 },
+                              { title: "500", value: 500 },
+                            ]}
                             onSetPage={(_e, p) => setComparePage(p)}
                             onPerPageSelect={(_e, pp) => {
                               setComparePerPage(pp);
