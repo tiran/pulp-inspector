@@ -27,7 +27,7 @@ dependencies = [
     "fastapi>=0.115",
     "pypi-simple",
     "uvicorn[standard]>=0.34",
-    "zipwire[aiohttp]",
+    "zipwire[aiohttp]>=0.3.0",
 ]
 
 [project.optional-dependencies]

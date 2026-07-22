@@ -5,7 +5,7 @@ from __future__ import annotations
 import dataclasses
 import logging
 
-from zipwire import AsyncRemoteZip
+from zipwire import AsyncRemoteWheel
 from zipwire.backends import AiohttpReader
 
 from pulp_inspector.session import LRUCache, get_session
@@ -51,8 +51,8 @@ async def inspect_wheel(url: str, filename: str) -> WheelContents:
     files: list[WheelFileEntry] = []
     metadata: str | None = None
 
-    async with AsyncRemoteZip(reader) as rz:
-        for info in await rz.infolist():
+    async with AsyncRemoteWheel(reader) as rz:
+        for info in rz.infolist():
             files.append(
                 WheelFileEntry(
                     filename=info.filename,
@@ -61,7 +61,7 @@ async def inspect_wheel(url: str, filename: str) -> WheelContents:
                     crc32=info.CRC,
                 )
             )
-            if info.filename.endswith(".dist-info/METADATA"):
+            if info.filename == rz.metadata_name:
                 raw = await rz.read(info.filename)
                 metadata = raw.decode("utf-8", errors="replace")
 
@@ -90,5 +90,5 @@ async def read_wheel_file(url: str, filepath: str) -> bytes:
     """
     session = get_session()
     reader = AiohttpReader(url, session=session)
-    async with AsyncRemoteZip(reader) as rz:
+    async with AsyncRemoteWheel(reader) as rz:
         return await rz.read(filepath)
