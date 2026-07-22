@@ -40,14 +40,14 @@ class IndexType(enum.Enum):
 
 # rhoai-{version}[-EA{n}]-{accelerator}[{accel_ver}]-{rhel}[-sdists][-test]
 _NAME_RE = re.compile(
-    r"^(rhoai-\d+\.\d+(?:-EA\d+)?)"  # product_version
+    r"^(rhoai-\d+\.\d+(?:-EA\d+)?(?:-stable)?)"  # product_version
     r"-([a-z]+)([\d.]*)"  # accelerator name + optional version
     r"-(ubi\d+)"  # rhel_version
     r"(?:-sdists)?"
     r"(?:-test)?$"
 )
 
-_VERSION_RE = re.compile(r"^(\w+)-(\d+)\.(\d+)(?:-EA(\d+))?$")
+_VERSION_RE = re.compile(r"^(\w+)-(\d+)\.(\d+)(?:-EA(\d+))?(-stable)?$")
 
 
 def version_sort_key(
@@ -61,7 +61,7 @@ def version_sort_key(
     m = _VERSION_RE.match(version)
     if m is None:
         return (version, 0, 0, 0.0)
-    product, major, minor, ea = m.groups()
+    product, major, minor, ea, _stable = m.groups()
     if ea is None:
         return (product, int(major), int(minor), float("inf"))
     return (product, int(major), int(minor), float(ea))
@@ -169,9 +169,12 @@ def route_segments(dist: DistributionInfo) -> tuple[str, str, str]:
         return (dist.base_path, "", "")
     product = m.group(1)
     ea = m.group(4)
+    stable = m.group(5)
     version = f"{m.group(2)}.{m.group(3)}"
     if ea is not None:
         version = f"{version}-EA{ea}"
+    if stable is not None:
+        version = f"{version}-stable"
     is_test = labels.get("test", "false") == "true"
     if is_test:
         variant = f"{variant}-test"
