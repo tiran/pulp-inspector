@@ -38,6 +38,7 @@ from pulp_inspector.api.schemas.indexes import (
 )
 from pulp_inspector.pulp import (
     DistributionInfo,
+    channel_group,
     get_all_distributions,
     route_segments,
     simple_index_url,
@@ -111,25 +112,34 @@ def _analyze_elf(raw: bytes, filepath: str) -> ELFInfoResponse:
 
 @router.get("/indexes", response_model=IndexListResponse)
 async def list_indexes() -> IndexListResponse:
-    """List all indexes grouped by product version."""
+    """List all channel indexes grouped by accelerator version."""
     distributions = await get_all_distributions()
 
-    # Group distributions by (product_version, test)
+    # Group distributions by (accelerator+version, test)
     groups: dict[tuple[str, bool], list[DistributionInfo]] = defaultdict(list)
     for dist in distributions:
-        labels = dist.pulp_labels
-        product_version = labels.get("product_version", dist.name)
-        is_test = labels.get("test", "false") == "true"
-        groups[(product_version, is_test)].append(dist)
+        is_test = dist.pulp_labels.get("test", "false") == "true"
+        groups[(channel_group(dist), is_test)].append(dist)
 
-    # Build response sorted by version descending (higher versions first,
-    # EA releases before the final release of the same version)
+    # Build response sorted by group key descending (higher accelerator
+    # versions first, e.g. rocm10.0 before rocm7.14)
+    def torch_sort_key(d: DistributionInfo) -> tuple[int, ...]:
+        rv = route_segments(d)[1]
+        try:
+            return tuple(int(x) for x in rv.split("."))
+        except ValueError:
+            return (0,)
+
     version_groups: list[IndexVersionGroup] = []
     for (version, is_test), dists in sorted(
         groups.items(), key=lambda item: version_sort_key(item[0][0]), reverse=True
     ):
         variants = []
-        for d in sorted(dists, key=lambda d: d.name):
+        # Sort by name, then stable-sort by torch version descending so
+        # newer torch channels come first within a group
+        ordered = sorted(dists, key=lambda d: d.name)
+        ordered.sort(key=torch_sort_key, reverse=True)
+        for d in ordered:
             rn, rv, rvar = route_segments(d)
             variants.append(
                 IndexVariant(

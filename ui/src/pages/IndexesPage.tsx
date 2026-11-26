@@ -88,11 +88,16 @@ function IndexesPage() {
                   <LabelGroup
                     style={{ marginLeft: "0.5rem", display: "inline-flex" }}
                   >
-                    {variant.labels.accelerator && (
-                      <Label color="blue">{variant.labels.accelerator}</Label>
+                    {variant.labels.torch_version && (
+                      <Label color="blue">
+                        torch {variant.labels.torch_version}
+                      </Label>
                     )}
-                    {variant.labels.rhel_version && (
-                      <Label color="grey">{variant.labels.rhel_version}</Label>
+                    {variant.labels.maturity && (
+                      <Label color="purple">{variant.labels.maturity}</Label>
+                    )}
+                    {variant.labels.os && (
+                      <Label color="grey">{variant.labels.os}</Label>
                     )}
                   </LabelGroup>
                 </ListItem>
