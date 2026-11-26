@@ -20,7 +20,7 @@ class IndexVariant(BaseModel):
 
 
 class IndexVersionGroup(BaseModel):
-    """A product version group with its distribution variants."""
+    """A channel group (accelerator + version) with its distribution variants."""
 
     version: str
     test: bool

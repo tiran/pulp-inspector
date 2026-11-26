@@ -1,6 +1,6 @@
 # Pulp Inspector
 
-Browse and inspect Python wheels hosted on Pulp Python indexes, such as the RHOAI indexes on [packages.redhat.com](https://packages.redhat.com/).
+Browse and inspect Python wheels hosted on Pulp Python indexes, such as the accelerator channels (`cuda13.0-torch2.15-el9.8`, `cpu-torch2.13-el9.8`, ...) on [packages.redhat.com](https://packages.redhat.com/domains/public-rhai/distributions).
 
 ## Features
 
